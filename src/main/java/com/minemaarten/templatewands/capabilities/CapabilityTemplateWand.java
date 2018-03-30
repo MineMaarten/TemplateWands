@@ -1,11 +1,9 @@
 package com.minemaarten.templatewands.capabilities;
 
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.Mirror;
-import net.minecraft.util.Rotation;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
-import net.minecraft.world.gen.structure.template.PlacementSettings;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityInject;
 import net.minecraftforge.common.util.INBTSerializable;
@@ -28,12 +26,12 @@ public class CapabilityTemplateWand implements INBTSerializable<NBTTagCompound>{
         return template != null;
     }
 
-    public boolean registerCoordinate(World world, BlockPos pos){
+    public boolean registerCoordinate(World world, BlockPos pos, EnumFacing facing){
         if(capturer == null) {
             capturer = new TemplateCapturer(pos);
             return true;
         } else {
-            template = capturer.capture(world, pos);
+            template = capturer.capture(world, pos, facing);
             return template != null;
         }
     }
@@ -43,10 +41,9 @@ public class CapabilityTemplateWand implements INBTSerializable<NBTTagCompound>{
         template = null;
     }
 
-    public void place(World world, BlockPos pos){
+    public void place(World world, BlockPos pos, EnumFacing facing){
         if(hasTemplate()) {
-            PlacementSettings settings = (new PlacementSettings()).setMirror(Mirror.NONE).setRotation(Rotation.NONE).setIgnoreEntities(true).setChunk(null).setReplacedBlock(null).setIgnoreStructureBlock(true);
-            template.addBlocksToWorld(world, pos, settings);
+            template.addBlocksToWorld(world, pos, facing);
         }
     }
 

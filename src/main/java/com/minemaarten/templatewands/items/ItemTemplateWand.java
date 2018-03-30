@@ -41,10 +41,10 @@ public class ItemTemplateWand extends Item{
             if(!player.isSneaking()) {
                 if(cap.hasTemplate()) {
                     player.sendStatusMessage(new TextComponentString("Template placed"), false); //TODO language table
-                    cap.place(world, pos);
+                    cap.place(world, pos, player.getHorizontalFacing());
                     return EnumActionResult.SUCCESS;
                 } else {
-                    if(cap.registerCoordinate(world, pos)) {
+                    if(cap.registerCoordinate(world, pos, player.getHorizontalFacing())) {
                         player.sendStatusMessage(new TextComponentString("Coordinate registered"), false); //TODO language table
                         return EnumActionResult.SUCCESS;
                     } else {
