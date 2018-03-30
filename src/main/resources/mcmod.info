@@ -1,0 +1,15 @@
+[
+{
+  "modid": "templatewands",
+  "name": "Template Wands",
+  "description": "Copy and paste structures in Minecraft Survival Mode!",
+  "version": "${version}",
+  "mcversion": "${mcversion}",
+  "url": "https://github.com/MineMaarten/TemplateWands",
+  "updateUrl": "",
+  "authorList": ["MineMaarten"],
+  "credits": "",
+  "screenshots": [],
+  "dependencies": []
+}
+]
