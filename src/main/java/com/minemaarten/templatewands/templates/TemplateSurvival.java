@@ -81,7 +81,7 @@ public class TemplateSurvival extends Template{
 
     private PlacementSettings getPlacementSettings(EnumFacing facing){
         Rotation rotation = EnumFacingUtils.getRotation(captureFacing, facing);
-        return (new PlacementSettings()).setMirror(Mirror.NONE).setRotation(rotation).setIgnoreEntities(true).setChunk(null).setReplacedBlock(null).setIgnoreStructureBlock(true);
+        return (new PlacementSettings()).setMirror(Mirror.NONE).setRotation(rotation).setIgnoreEntities(false).setChunk(null).setReplacedBlock(null).setIgnoreStructureBlock(true);
     }
 
     private void removeExistingBlocks(World world, BlockPos pos, EnumFacing facing, boolean dropItems){
