@@ -9,11 +9,14 @@ import net.minecraftforge.fml.common.discovery.ASMDataTable.ASMData;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 
 import com.minemaarten.templatewands.api.blacklist.IBlacklistProvider;
+import com.minemaarten.templatewands.api.ingredients.IBlockIngredientProvider;
+import com.minemaarten.templatewands.api.ingredients.IEntityIngredientProvider;
 import com.minemaarten.templatewands.api.ingredients.IIngredientProvider;
 import com.minemaarten.templatewands.util.Log;
 
 public class APIHandler{
-    public List<IIngredientProvider> ingredientProviders = new ArrayList<>();
+    public List<IBlockIngredientProvider> blockIngredientProviders = new ArrayList<>();
+    public List<IEntityIngredientProvider> entityIngredientProviders = new ArrayList<>();
     public List<IBlacklistProvider> blacklistProviders = new ArrayList<>();
 
     public void initializeAPIImplementors(ASMDataTable asmData){
@@ -23,10 +26,16 @@ public class APIHandler{
                 Class<?> clazz = Class.forName(annotatedClass.getClassName());
                 Log.info("Found class annotating @TemplateWands: " + annotatedClass.getClassName());
 
-                if(IIngredientProvider.class.isAssignableFrom(clazz)) {
-                    IIngredientProvider provider = (IIngredientProvider)clazz.newInstance();
-                    addIngredientProvider(provider);
-                    Log.info("Successfully registered the IIngredientProvider for \"" + annotatedClass.getClassName() + "\".");
+                if(IBlockIngredientProvider.class.isAssignableFrom(clazz)) {
+                    IBlockIngredientProvider provider = (IBlockIngredientProvider)clazz.newInstance();
+                    addPrioritizedIngredientProvider(blockIngredientProviders, provider);
+                    Log.info("Successfully registered the IBlockIngredientProvider for \"" + annotatedClass.getClassName() + "\".");
+                }
+
+                if(IEntityIngredientProvider.class.isAssignableFrom(clazz)) {
+                    IEntityIngredientProvider provider = (IEntityIngredientProvider)clazz.newInstance();
+                    addPrioritizedIngredientProvider(entityIngredientProviders, provider);
+                    Log.info("Successfully registered the IEntityIngredientProvider for \"" + annotatedClass.getClassName() + "\".");
                 }
 
                 if(IBlacklistProvider.class.isAssignableFrom(clazz)) {
@@ -46,7 +55,7 @@ public class APIHandler{
         }
 
         Log.info("Ingredient providers (ordered by priority):");
-        for(IIngredientProvider provider : ingredientProviders) {
+        for(IBlockIngredientProvider provider : blockIngredientProviders) {
             Log.info(provider.getClass().getCanonicalName());
         }
 
@@ -56,16 +65,16 @@ public class APIHandler{
         }
     }
 
-    private void addIngredientProvider(IIngredientProvider provider){
+    private <T extends IIngredientProvider> void addPrioritizedIngredientProvider(List<T> providers, T provider){
         EventPriority priority = provider.getPriority();
-        for(int i = ingredientProviders.size() - 1; i >= 0; i--) {
-            IIngredientProvider other = ingredientProviders.get(i);
+        for(int i = providers.size() - 1; i >= 0; i--) {
+            IIngredientProvider other = providers.get(i);
             if(isLowerOrEqualPriority(priority, other.getPriority())) {
-                ingredientProviders.add(i + 1, provider);
+                providers.add(i + 1, provider);
                 return;
             }
         }
-        ingredientProviders.add(provider);
+        providers.add(provider);
     }
 
     private boolean isLowerOrEqualPriority(EventPriority checkingPriority, EventPriority otherPriority){

@@ -1,4 +1,4 @@
-package com.minemaarten.templatewands.templates.ingredients.providers;
+package com.minemaarten.templatewands.templates.ingredients.providers.blocks;
 
 import net.minecraft.block.BlockJukebox.TileEntityJukebox;
 import net.minecraft.init.Blocks;
@@ -6,12 +6,13 @@ import net.minecraft.item.ItemStack;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 
 import com.minemaarten.templatewands.api.TemplateWands;
-import com.minemaarten.templatewands.api.ingredients.IIngredientProvider;
+import com.minemaarten.templatewands.api.ingredients.IBlockIngredientProvider;
 import com.minemaarten.templatewands.api.ingredients.IInputIngredientList;
 import com.minemaarten.templatewands.api.util.BlockContext;
+import com.minemaarten.templatewands.templates.ingredients.providers.IngredientList;
 
 @TemplateWands
-public class ProviderJukeBox implements IIngredientProvider{
+public class ProviderJukeBox implements IBlockIngredientProvider{
     @Override
     public EventPriority getPriority(){
         return EventPriority.HIGHEST;

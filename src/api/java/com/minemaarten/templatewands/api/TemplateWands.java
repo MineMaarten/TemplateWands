@@ -5,10 +5,12 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import com.minemaarten.templatewands.api.ingredients.IIngredientProvider;
+import com.minemaarten.templatewands.api.blacklist.IBlacklistProvider;
+import com.minemaarten.templatewands.api.ingredients.IBlockIngredientProvider;
+import com.minemaarten.templatewands.api.ingredients.IEntityIngredientProvider;
 
 /**
- * Annotation that should be used on {@link IIngredientProvider} implementations.
+ * Annotation that should be used on {@link IBlockIngredientProvider}, {@link IEntityIngredientProvider} and {@link IBlacklistProvider} implementations.
  * @author Maarten
  */
 

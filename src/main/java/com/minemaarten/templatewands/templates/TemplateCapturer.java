@@ -18,7 +18,7 @@ public class TemplateCapturer{
 
         TemplateSurvival template = new TemplateSurvival();
         template.setCaptureFacing(player.getHorizontalFacing());
-        template.takeBlocksFromWorld(world, startPos, size, false, null, player);
+        template.takeBlocksFromWorld(world, startPos, size, true, null, player);
         return template;
     }
 }

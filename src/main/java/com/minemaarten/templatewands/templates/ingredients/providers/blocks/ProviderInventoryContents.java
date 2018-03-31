@@ -1,4 +1,4 @@
-package com.minemaarten.templatewands.templates.ingredients.providers;
+package com.minemaarten.templatewands.templates.ingredients.providers.blocks;
 
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
@@ -6,12 +6,13 @@ import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
 
 import com.minemaarten.templatewands.api.TemplateWands;
-import com.minemaarten.templatewands.api.ingredients.IIngredientProvider;
+import com.minemaarten.templatewands.api.ingredients.IBlockIngredientProvider;
 import com.minemaarten.templatewands.api.ingredients.IInputIngredientList;
 import com.minemaarten.templatewands.api.util.BlockContext;
+import com.minemaarten.templatewands.templates.ingredients.providers.IngredientList;
 
 @TemplateWands
-public class ProviderInventoryContents implements IIngredientProvider{
+public class ProviderInventoryContents implements IBlockIngredientProvider{
 
     @Override
     public EventPriority getPriority(){

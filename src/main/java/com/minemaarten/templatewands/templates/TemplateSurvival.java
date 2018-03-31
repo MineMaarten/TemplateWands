@@ -8,6 +8,8 @@ import javax.annotation.Nullable;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.item.EntityPainting;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.PacketBuffer;
@@ -18,6 +20,7 @@ import net.minecraft.util.Mirror;
 import net.minecraft.util.Rotation;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.minecraft.world.gen.structure.template.PlacementSettings;
 import net.minecraft.world.gen.structure.template.Template;
@@ -25,9 +28,11 @@ import net.minecraftforge.items.IItemHandler;
 
 import org.apache.commons.lang3.NotImplementedException;
 
+import com.google.common.base.Predicate;
 import com.google.common.collect.Lists;
 import com.minemaarten.templatewands.TemplateWands;
 import com.minemaarten.templatewands.api.util.BlockContext;
+import com.minemaarten.templatewands.api.util.EntityContext;
 import com.minemaarten.templatewands.templates.ingredients.providers.IngredientList;
 import com.minemaarten.templatewands.templates.ingredients.providers.IngredientProviderManager.EnumCaptureStatus;
 import com.minemaarten.templatewands.util.EnumFacingUtils;
@@ -137,10 +142,42 @@ public class TemplateSurvival extends Template{
             this.blocks.addAll(list2);
 
             if(takeEntities) {
-                //TODO this.takeEntitiesFromWorld(worldIn, blockpos1, blockpos2.add(1, 1, 1));
+                takeEntitiesFromWorld(worldIn, blockpos1, blockpos2.add(1, 1, 1), player);
             } else {
                 this.entities.clear();
             }
+        }
+    }
+
+    /**
+     * MineMaarten: Copied from super to add item requirement capturing
+     */
+    private void takeEntitiesFromWorld(World worldIn, BlockPos startPos, BlockPos endPos, EntityPlayer player){
+        List<Entity> list = worldIn.<Entity> getEntitiesWithinAABB(Entity.class, new AxisAlignedBB(startPos, endPos), new Predicate<Entity>(){
+            @Override
+            public boolean apply(@Nullable Entity p_apply_1_){
+                return !(p_apply_1_ instanceof EntityPlayer);
+            }
+        });
+        this.entities.clear();
+
+        for(Entity entity : list) {
+            if(!capture(new EntityContext(entity, player))) {
+                continue; //Skip when blacklisted
+            }
+
+            Vec3d vec3d = new Vec3d(entity.posX - startPos.getX(), entity.posY - startPos.getY(), entity.posZ - startPos.getZ());
+            NBTTagCompound nbttagcompound = new NBTTagCompound();
+            entity.writeToNBTOptional(nbttagcompound);
+            BlockPos blockpos;
+
+            if(entity instanceof EntityPainting) {
+                blockpos = ((EntityPainting)entity).getHangingPosition().subtract(startPos);
+            } else {
+                blockpos = new BlockPos(vec3d);
+            }
+
+            this.entities.add(new Template.EntityInfo(vec3d, blockpos, nbttagcompound));
         }
     }
 
@@ -150,6 +187,15 @@ public class TemplateSurvival extends Template{
      * @return true if capture successful, false if blacklisted
      */
     private boolean capture(BlockContext context){
+        return TemplateWands.instance.getProviderManager().addIngredients(context, ingredients) == EnumCaptureStatus.ALLOWED;
+    }
+
+    /**
+     * 
+     * @param context
+     * @return true if capture successful, false if blacklisted
+     */
+    private boolean capture(EntityContext context){
         return TemplateWands.instance.getProviderManager().addIngredients(context, ingredients) == EnumCaptureStatus.ALLOWED;
     }
 

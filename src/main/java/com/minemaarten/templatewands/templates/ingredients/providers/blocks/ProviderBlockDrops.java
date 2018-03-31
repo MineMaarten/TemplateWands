@@ -1,4 +1,4 @@
-package com.minemaarten.templatewands.templates.ingredients.providers;
+package com.minemaarten.templatewands.templates.ingredients.providers.blocks;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -11,12 +11,12 @@ import net.minecraft.util.NonNullList;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 
 import com.minemaarten.templatewands.api.TemplateWands;
-import com.minemaarten.templatewands.api.ingredients.IIngredientProvider;
+import com.minemaarten.templatewands.api.ingredients.IBlockIngredientProvider;
 import com.minemaarten.templatewands.api.ingredients.IInputIngredientList;
 import com.minemaarten.templatewands.api.util.BlockContext;
 
 @TemplateWands
-public class ProviderBlockDrops implements IIngredientProvider{
+public class ProviderBlockDrops implements IBlockIngredientProvider{
 
     private Set<Block> freeBlocks = new HashSet<>();
 
