@@ -18,7 +18,6 @@ import net.minecraft.util.Mirror;
 import net.minecraft.util.Rotation;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.gen.structure.template.PlacementSettings;
 import net.minecraft.world.gen.structure.template.Template;
@@ -69,10 +68,10 @@ public class TemplateSurvival extends Template{
         return new AxisAlignedBB(pos, endPos).expand(1, 1, 1);
     }
 
-    private Iterable<MutableBlockPos> getTemplatePositions(BlockPos pos, EnumFacing facing){
+    private Iterable<BlockPos> getTemplatePositions(BlockPos pos, EnumFacing facing){
         PlacementSettings settings = getPlacementSettings(facing);
         BlockPos endPos = transformedBlockPos(settings, size.add(-1, -1, -1)).add(pos);
-        return BlockPos.getAllInBoxMutable(pos, endPos);
+        return BlockPos.getAllInBox(pos, endPos); //Don't use the more efficient mutable iteration, as the pos is referenced from the network thread when spawning particles.
     }
 
     private PlacementSettings getPlacementSettings(EnumFacing facing){
@@ -81,7 +80,7 @@ public class TemplateSurvival extends Template{
     }
 
     private void removeExistingBlocks(World world, BlockPos pos, EnumFacing facing, boolean dropItems){
-        for(MutableBlockPos p : getTemplatePositions(pos, facing)) {
+        for(BlockPos p : getTemplatePositions(pos, facing)) {
             world.destroyBlock(p, dropItems);
         }
     }

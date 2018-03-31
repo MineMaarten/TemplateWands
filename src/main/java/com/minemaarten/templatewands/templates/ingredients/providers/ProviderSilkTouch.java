@@ -32,7 +32,8 @@ public class ProviderSilkTouch implements IIngredientProvider{
         if(item == Items.AIR) {
             return ItemStack.EMPTY;
         } else {
-            return new ItemStack(item, 1, block.getMetaFromState(state));
+            int meta = item.getHasSubtypes() ? block.getMetaFromState(state) : 0;
+            return new ItemStack(item, 1, meta);
         }
     }
 }

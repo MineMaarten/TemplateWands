@@ -58,6 +58,10 @@ public class IngredientList implements IInputIngredientList, Iterable<TemplateIn
         return hasChanged;
     }
 
+    public void markChanged(){
+        hasChanged = true;
+    }
+
     public IngredientList copy(){
         IngredientList copy = new IngredientList();
         for(TemplateIngredient<?> ingredient : ingredients) {

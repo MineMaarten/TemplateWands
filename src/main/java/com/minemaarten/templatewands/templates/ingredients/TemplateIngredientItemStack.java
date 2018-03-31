@@ -49,6 +49,6 @@ public class TemplateIngredientItemStack extends TemplateIngredient<ItemStack>{
 
     @Override
     public String toString(){
-        return amount + "x " + ingredient.getDisplayName();
+        return amount + "x " + ingredient.getDisplayName() + (ingredient.hasTagCompound() ? " (+ NBT)" : "");
     }
 }
