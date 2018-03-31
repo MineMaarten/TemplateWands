@@ -23,11 +23,13 @@ public class IngredientList implements IInputIngredientList, Iterable<TemplateIn
 
     @Override
     public void addItemStack(ItemStack stack){
+        if(stack.isEmpty()) throw new IllegalArgumentException("Stack may not be empty!");
         add(new TemplateIngredientItemStack(stack));
     }
 
     @Override
     public void addItemStackExact(ItemStack stack){
+        if(stack.isEmpty()) throw new IllegalArgumentException("Stack may not be empty!");
         add(new TemplateIngredientItemStackExact(stack));
     }
 

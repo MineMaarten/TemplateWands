@@ -18,6 +18,7 @@ import net.minecraft.util.Mirror;
 import net.minecraft.util.Rotation;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.gen.structure.template.PlacementSettings;
 import net.minecraft.world.gen.structure.template.Template;
@@ -55,6 +56,7 @@ public class TemplateSurvival extends Template{
     public IngredientRequirementResult addBlocksToWorld(World world, BlockPos pos, EnumFacing facing, boolean useItems, IItemHandler handler){
         IngredientRequirementResult result = useItems ? new IngredientRequirementResult(handler, ingredients) : IngredientRequirementResult.EMPTY;
         if(result.hasAllRequiredItems()) {
+            removeExistingBlocks(world, pos, facing, useItems);
             result.takeItems();
             addBlocksToWorld(world, pos, getPlacementSettings(facing));
         }
@@ -67,9 +69,21 @@ public class TemplateSurvival extends Template{
         return new AxisAlignedBB(pos, endPos).expand(1, 1, 1);
     }
 
+    private Iterable<MutableBlockPos> getTemplatePositions(BlockPos pos, EnumFacing facing){
+        PlacementSettings settings = getPlacementSettings(facing);
+        BlockPos endPos = transformedBlockPos(settings, size.add(-1, -1, -1)).add(pos);
+        return BlockPos.getAllInBoxMutable(pos, endPos);
+    }
+
     private PlacementSettings getPlacementSettings(EnumFacing facing){
         Rotation rotation = EnumFacingUtils.getRotation(captureFacing, facing);
         return (new PlacementSettings()).setMirror(Mirror.NONE).setRotation(rotation).setIgnoreEntities(true).setChunk(null).setReplacedBlock(null).setIgnoreStructureBlock(true);
+    }
+
+    private void removeExistingBlocks(World world, BlockPos pos, EnumFacing facing, boolean dropItems){
+        for(MutableBlockPos p : getTemplatePositions(pos, facing)) {
+            world.destroyBlock(p, dropItems);
+        }
     }
 
     @Override

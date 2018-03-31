@@ -5,12 +5,19 @@ import net.minecraft.nbt.NBTTagCompound;
 
 public class TemplateIngredientItemStack extends TemplateIngredient<ItemStack>{
 
+    /**
+     * Use a separate int as ItemStack's item count is a byte when serialized.
+     */
+    private int amount;
+
     public TemplateIngredientItemStack(ItemStack stack){
         super(stack.copy());
+        amount = stack.getCount();
     }
 
     public TemplateIngredientItemStack(NBTTagCompound tag){
         this(new ItemStack(tag));
+        amount = tag.getInteger("amount");
     }
 
     @Override
@@ -20,18 +27,19 @@ public class TemplateIngredientItemStack extends TemplateIngredient<ItemStack>{
 
     @Override
     public void addAmount(int amount){
-        ingredient.grow(amount);
+        this.amount += amount;
     }
 
     @Override
     public int getAmount(){
-        return ingredient.getCount();
+        return amount;
     }
 
     @Override
     public void writeToNBT(NBTTagCompound tag){
         super.writeToNBT(tag);
         ingredient.writeToNBT(tag);
+        tag.setInteger("amount", amount);
     }
 
     @Override
@@ -41,6 +49,6 @@ public class TemplateIngredientItemStack extends TemplateIngredient<ItemStack>{
 
     @Override
     public String toString(){
-        return "ItemStack: " + ingredient.toString();
+        return amount + "x " + ingredient.getDisplayName();
     }
 }

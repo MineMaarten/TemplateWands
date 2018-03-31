@@ -65,7 +65,7 @@ public class ItemTemplateWand extends Item implements IAABBRenderer{
                     }
                 }
             } else {
-                cap.clearTemplate();
+                cap.clearTemplate(player);
                 player.sendStatusMessage(new TextComponentString("Wand cleared"), false); //TODO language table
                 return EnumActionResult.SUCCESS;
             }

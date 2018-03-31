@@ -41,6 +41,6 @@ public class TemplateIngredientFluidStack extends TemplateIngredient<FluidStack>
 
     @Override
     public String toString(){
-        return "Fluid: " + ingredient.getUnlocalizedName() + "x" + getAmount();
+        return ingredient.amount + "mB " + ingredient.getLocalizedName();
     }
 }

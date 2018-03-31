@@ -50,9 +50,10 @@ public class CapabilityTemplateWand implements INBTSerializable<NBTTagCompound>{
         }
     }
 
-    public void clearTemplate(){
+    public void clearTemplate(EntityPlayer player){
         capturer = null;
         template = null;
+        NetworkHandler.sendTo(new PacketUpdateTemplate(template), (EntityPlayerMP)player);
     }
 
     public void place(World world, BlockPos pos, EntityPlayer player, EnumFacing facing){

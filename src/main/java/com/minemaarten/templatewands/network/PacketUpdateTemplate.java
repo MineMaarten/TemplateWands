@@ -19,7 +19,7 @@ public class PacketUpdateTemplate extends AbstractPacket<PacketUpdateTemplate>{
     @Override
     public void toBytes(ByteBuf buf){
         buf.writeBoolean(template != null);
-        template.writeToBuf(buf);
+        if(template != null) template.writeToBuf(buf);
     }
 
     @Override
