@@ -4,6 +4,7 @@ import java.util.function.Predicate;
 
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.items.IItemHandler;
+import net.minecraftforge.items.ItemStackHandler;
 
 import com.minemaarten.templatewands.templates.ingredients.TemplateIngredient;
 import com.minemaarten.templatewands.templates.ingredients.TemplateIngredientItemStack;
@@ -15,6 +16,8 @@ public class IngredientRequirementResult{
     private final IItemHandler inventory;
     private final IngredientList ingredients;
     private final IngredientList missingIngredients;
+
+    public static final IngredientRequirementResult EMPTY = new IngredientRequirementResult(new ItemStackHandler(0), new IngredientList());
 
     /**
      * @param inventory An inventory that is known to have lean extraction rules, so that any ItemStack from getStackInSlot can be extracted

@@ -1,5 +1,7 @@
 package com.minemaarten.templatewands.templates;
 
+import io.netty.buffer.ByteBuf;
+
 import java.util.List;
 
 import javax.annotation.Nullable;
@@ -8,11 +10,13 @@ import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.network.PacketBuffer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumFacing.Axis;
 import net.minecraft.util.Mirror;
 import net.minecraft.util.Rotation;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.gen.structure.template.PlacementSettings;
@@ -48,15 +52,24 @@ public class TemplateSurvival extends Template{
         return this;
     }
 
-    public IngredientRequirementResult addBlocksToWorld(World world, BlockPos pos, EnumFacing facing, IItemHandler handler){
-        IngredientRequirementResult result = new IngredientRequirementResult(handler, ingredients);
+    public IngredientRequirementResult addBlocksToWorld(World world, BlockPos pos, EnumFacing facing, boolean useItems, IItemHandler handler){
+        IngredientRequirementResult result = useItems ? new IngredientRequirementResult(handler, ingredients) : IngredientRequirementResult.EMPTY;
         if(result.hasAllRequiredItems()) {
             result.takeItems();
-            Rotation rotation = EnumFacingUtils.getRotation(captureFacing, facing);
-            PlacementSettings settings = (new PlacementSettings()).setMirror(Mirror.NONE).setRotation(rotation).setIgnoreEntities(true).setChunk(null).setReplacedBlock(null).setIgnoreStructureBlock(true);
-            addBlocksToWorld(world, pos, settings);
+            addBlocksToWorld(world, pos, getPlacementSettings(facing));
         }
         return result;
+    }
+
+    public AxisAlignedBB getAABB(BlockPos pos, EnumFacing facing){
+        PlacementSettings settings = getPlacementSettings(facing);
+        BlockPos endPos = transformedBlockPos(settings, size.add(-1, -1, -1)).add(pos);
+        return new AxisAlignedBB(pos, endPos).expand(1, 1, 1);
+    }
+
+    private PlacementSettings getPlacementSettings(EnumFacing facing){
+        Rotation rotation = EnumFacingUtils.getRotation(captureFacing, facing);
+        return (new PlacementSettings()).setMirror(Mirror.NONE).setRotation(rotation).setIgnoreEntities(true).setChunk(null).setReplacedBlock(null).setIgnoreStructureBlock(true);
     }
 
     @Override
@@ -139,5 +152,17 @@ public class TemplateSurvival extends Template{
         captureFacing = EnumFacing.VALUES[tag.getByte("facing")];
         ingredients = IngredientList.fromNBT(tag);
         super.read(tag);
+    }
+
+    public void writeToBuf(ByteBuf b){
+        b.writeByte(captureFacing.ordinal());
+        new PacketBuffer(b).writeBlockPos(size);
+    }
+
+    public static TemplateSurvival fromByteBuf(ByteBuf b){
+        TemplateSurvival template = new TemplateSurvival();
+        template.captureFacing = EnumFacing.VALUES[b.readByte()];
+        template.size = new PacketBuffer(b).readBlockPos();
+        return template;
     }
 }
