@@ -1,12 +1,12 @@
 package com.minemaarten.templatewands.templates;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.annotation.Nullable;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
@@ -17,9 +17,15 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.gen.structure.template.PlacementSettings;
 import net.minecraft.world.gen.structure.template.Template;
+import net.minecraftforge.items.IItemHandler;
+
+import org.apache.commons.lang3.NotImplementedException;
 
 import com.google.common.collect.Lists;
-import com.minemaarten.templatewands.templates.ingredients.TemplateIngredient;
+import com.minemaarten.templatewands.TemplateWands;
+import com.minemaarten.templatewands.api.util.BlockContext;
+import com.minemaarten.templatewands.templates.ingredients.providers.IngredientList;
+import com.minemaarten.templatewands.templates.ingredients.providers.IngredientProviderManager.EnumCaptureStatus;
 import com.minemaarten.templatewands.util.EnumFacingUtils;
 
 /**
@@ -32,9 +38,9 @@ public class TemplateSurvival extends Template{
      * The facing at which this template was captured at, used to determine the rotation required for placement
      */
     private EnumFacing captureFacing;
-    private List<TemplateIngredient<?>> ingredients = new ArrayList<>();
+    private IngredientList ingredients = new IngredientList();
 
-    //TODO private List<TemplateIngredient<?>> returned = new ArrayList<>(); // things like empty buckets after emptying a water bucket
+    //TODO private IngredientList returned = new IngredientList(); // things like empty buckets after emptying a water bucket
 
     public TemplateSurvival setCaptureFacing(EnumFacing captureFacing){
         if(captureFacing.getAxis() == Axis.Y) throw new IllegalArgumentException("Only horizontals are allowed!");
@@ -42,18 +48,29 @@ public class TemplateSurvival extends Template{
         return this;
     }
 
-    public void addBlocksToWorld(World world, BlockPos pos, EnumFacing facing){
-        Rotation rotation = EnumFacingUtils.getRotation(captureFacing, facing);
-        PlacementSettings settings = (new PlacementSettings()).setMirror(Mirror.NONE).setRotation(rotation).setIgnoreEntities(true).setChunk(null).setReplacedBlock(null).setIgnoreStructureBlock(true);
-        addBlocksToWorld(world, pos, settings);
+    public IngredientRequirementResult addBlocksToWorld(World world, BlockPos pos, EnumFacing facing, IItemHandler handler){
+        IngredientRequirementResult result = new IngredientRequirementResult(handler, ingredients);
+        if(result.hasAllRequiredItems()) {
+            result.takeItems();
+            Rotation rotation = EnumFacingUtils.getRotation(captureFacing, facing);
+            PlacementSettings settings = (new PlacementSettings()).setMirror(Mirror.NONE).setRotation(rotation).setIgnoreEntities(true).setChunk(null).setReplacedBlock(null).setIgnoreStructureBlock(true);
+            addBlocksToWorld(world, pos, settings);
+        }
+        return result;
+    }
+
+    @Override
+    @Deprecated
+    public void takeBlocksFromWorld(World worldIn, BlockPos startPos, BlockPos endPos, boolean takeEntities, @Nullable Block toIgnore){
+        throw new NotImplementedException("Use the version using EntityPlayer");
     }
 
     /**
      * takes blocks from the world and puts the data them into this template
      * MineMaarten: Copied from super to add item requirement capturing
      */
-    @Override
-    public void takeBlocksFromWorld(World worldIn, BlockPos startPos, BlockPos endPos, boolean takeEntities, @Nullable Block toIgnore){
+    public void takeBlocksFromWorld(World worldIn, BlockPos startPos, BlockPos endPos, boolean takeEntities, @Nullable Block toIgnore, EntityPlayer player){
+        ingredients = new IngredientList();
         if(endPos.getX() >= 1 && endPos.getY() >= 1 && endPos.getZ() >= 1) {
             BlockPos blockpos = startPos.add(endPos).add(-1, -1, -1);
             List<Template.BlockInfo> list = Lists.<Template.BlockInfo> newArrayList();
@@ -69,6 +86,10 @@ public class TemplateSurvival extends Template{
 
                 if(toIgnore == null || toIgnore != iblockstate.getBlock()) {
                     TileEntity tileentity = worldIn.getTileEntity(blockpos$mutableblockpos);
+
+                    if(!capture(new BlockContext(blockpos$mutableblockpos, iblockstate, tileentity, player))) {
+                        continue; //Skip when blacklisted
+                    }
 
                     if(tileentity != null) {
                         NBTTagCompound nbttagcompound = tileentity.writeToNBT(new NBTTagCompound());
@@ -97,15 +118,26 @@ public class TemplateSurvival extends Template{
         }
     }
 
+    /**
+     * 
+     * @param context
+     * @return true if capture successful, false if blacklisted
+     */
+    private boolean capture(BlockContext context){
+        return TemplateWands.instance.getProviderManager().addIngredients(context, ingredients) == EnumCaptureStatus.ALLOWED;
+    }
+
     @Override
     public NBTTagCompound writeToNBT(NBTTagCompound tag){
         tag.setByte("facing", (byte)captureFacing.ordinal());
+        ingredients.writeToNBT(tag);
         return super.writeToNBT(tag);
     }
 
     @Override
     public void read(NBTTagCompound tag){
         captureFacing = EnumFacing.VALUES[tag.getByte("facing")];
+        ingredients = IngredientList.fromNBT(tag);
         super.read(tag);
     }
 }
