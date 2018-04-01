@@ -1,0 +1,7 @@
+{
+    "parent": "item/generated",
+    "textures": {
+        "layer0": "templatewands:items/template_wand",
+        "layer1": "templatewands:items/template_wand_iron"
+    }
+}

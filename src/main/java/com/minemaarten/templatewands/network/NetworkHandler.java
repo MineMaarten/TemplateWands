@@ -13,8 +13,10 @@ public class NetworkHandler{
 
     public static void init(){
         INSTANCE.registerMessage(PacketUpdateTemplate.class, PacketUpdateTemplate.class, discriminant++, Side.CLIENT);
+        INSTANCE.registerMessage(PacketUpdateCapturing.class, PacketUpdateCapturing.class, discriminant++, Side.CLIENT);
 
-        INSTANCE.registerMessage(PacketCreateInMidAir.class, PacketCreateInMidAir.class, discriminant++, Side.SERVER);
+        INSTANCE.registerMessage(PacketInteractInMidAir.class, PacketInteractInMidAir.class, discriminant++, Side.SERVER);
+        INSTANCE.registerMessage(PacketUpdateHoveredPos.class, PacketUpdateHoveredPos.class, discriminant++, Side.SERVER);
     }
 
     public static void sendToAll(IMessage message){

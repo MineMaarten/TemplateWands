@@ -2,7 +2,9 @@ package com.minemaarten.templatewands.templates;
 
 import io.netty.buffer.ByteBuf;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.annotation.Nullable;
 
@@ -48,6 +50,7 @@ public class TemplateSurvival extends Template{
      */
     private EnumFacing captureFacing;
     private IngredientList ingredients = new IngredientList();
+    public Set<BlockPos> blacklistedPositions = new HashSet<>(); //Used for visualization only
 
     //TODO private IngredientList returned = new IngredientList(); // things like empty buckets after emptying a water bucket
 
@@ -102,6 +105,7 @@ public class TemplateSurvival extends Template{
      */
     public void takeBlocksFromWorld(World worldIn, BlockPos startPos, BlockPos endPos, boolean takeEntities, @Nullable Block toIgnore, EntityPlayer player){
         ingredients = new IngredientList();
+        blacklistedPositions.clear();
         if(endPos.getX() >= 1 && endPos.getY() >= 1 && endPos.getZ() >= 1) {
             BlockPos blockpos = startPos.add(endPos).add(-1, -1, -1);
             List<Template.BlockInfo> list = Lists.<Template.BlockInfo> newArrayList();
@@ -118,7 +122,12 @@ public class TemplateSurvival extends Template{
                 if(toIgnore == null || toIgnore != iblockstate.getBlock()) {
                     TileEntity tileentity = worldIn.getTileEntity(blockpos$mutableblockpos);
 
+                    if(iblockstate.getBlock().isAir(iblockstate, worldIn, blockpos$mutableblockpos)) {
+                        continue; //Continue without adding to blacklist.
+                    }
+
                     if(!capture(new BlockContext(blockpos$mutableblockpos, iblockstate, tileentity, player))) {
+                        blacklistedPositions.add(new BlockPos(blockpos$mutableblockpos));
                         continue; //Skip when blacklisted
                     }
 

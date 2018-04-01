@@ -1,5 +1,8 @@
 package com.minemaarten.templatewands.capabilities;
 
+import java.util.Collections;
+import java.util.Set;
+
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
@@ -14,6 +17,7 @@ import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
 
 import com.minemaarten.templatewands.network.NetworkHandler;
+import com.minemaarten.templatewands.network.PacketUpdateCapturing;
 import com.minemaarten.templatewands.network.PacketUpdateTemplate;
 import com.minemaarten.templatewands.templates.IngredientRequirementResult;
 import com.minemaarten.templatewands.templates.TemplateCapturer;
@@ -29,6 +33,11 @@ public class CapabilityTemplateWand implements INBTSerializable<NBTTagCompound>{
 
     public void setTemplate(TemplateSurvival template){
         this.template = template;
+        capturer = null;
+    }
+
+    public TemplateCapturer getCapturer(){
+        return capturer;
     }
 
     public TemplateSurvival getTemplate(){
@@ -39,12 +48,36 @@ public class CapabilityTemplateWand implements INBTSerializable<NBTTagCompound>{
         return template != null;
     }
 
-    public boolean registerCoordinate(World world, BlockPos pos, EntityPlayer player){
+    public void updateCaptureState(BlockPos firstPos, Set<BlockPos> blacklistedPositions){
+        capturer = new TemplateCapturer(firstPos);
+        capturer.blacklistedPositions = blacklistedPositions;
+    }
+
+    public void updateLastKnownHoverPos(BlockPos pos){
+        if(capturer != null) {
+            capturer.lastKnownClientPos = pos;
+        }
+    }
+
+    public void onInterval(World world, EntityPlayer player){
+        if(capturer != null) {
+            capturer.onInterval(world, player);
+        }
+    }
+
+    public boolean registerCoordinate(World world, BlockPos pos, EntityPlayer player, int maxBlocks){
         if(capturer == null) {
             capturer = new TemplateCapturer(pos);
+            NetworkHandler.sendTo(new PacketUpdateCapturing(pos, Collections.emptySet()), (EntityPlayerMP)player);
             return true;
         } else {
             template = capturer.capture(world, pos, player);
+            capturer = null;
+
+            if(template.size.getX() * template.size.getY() * template.size.getZ() > maxBlocks) {
+                template = null; //Too many blocks for this tier
+            }
+
             NetworkHandler.sendTo(new PacketUpdateTemplate(template), (EntityPlayerMP)player);
             return template != null;
         }

@@ -1,10 +1,12 @@
 package com.minemaarten.templatewands.items;
 
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.creativetab.CreativeTabs;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -26,14 +28,17 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 import com.minemaarten.templatewands.capabilities.CapabilityTemplateWand;
 import com.minemaarten.templatewands.capabilities.DefaultCapabilityProvider;
 import com.minemaarten.templatewands.network.NetworkHandler;
-import com.minemaarten.templatewands.network.PacketCreateInMidAir;
+import com.minemaarten.templatewands.network.PacketInteractInMidAir;
+import com.minemaarten.templatewands.network.PacketUpdateHoveredPos;
+import com.minemaarten.templatewands.templates.TemplateCapturer;
 import com.minemaarten.templatewands.templates.TemplateSurvival;
 
 public class ItemTemplateWand extends Item implements IAABBRenderer{
-    public ItemTemplateWand(){
+    private final int maxBlocks;
+
+    public ItemTemplateWand(int maxBlocks){
+        this.maxBlocks = maxBlocks;
         setCreativeTab(CreativeTabs.TOOLS); //TODO custom tab
-        setRegistryName("template_wand");
-        setUnlocalizedName("template_wand");
     }
 
     @Override
@@ -50,26 +55,30 @@ public class ItemTemplateWand extends Item implements IAABBRenderer{
         if(hand != EnumHand.MAIN_HAND) return EnumActionResult.PASS;
         if(!world.isRemote) {
             ItemStack stack = player.getHeldItem(hand);
-            CapabilityTemplateWand cap = getCap(stack);
-            if(!player.isSneaking()) {
-                if(cap.hasTemplate()) {
-                    cap.place(world, pos, player, player.getHorizontalFacing());
+            return interactWand(player, world, pos, stack, player.getHorizontalFacing());
+        } else {
+            return EnumActionResult.SUCCESS;
+        }
+    }
+
+    private EnumActionResult interactWand(EntityPlayer player, World world, BlockPos pos, ItemStack stack, EnumFacing facing){
+        CapabilityTemplateWand cap = getCap(stack);
+        if(!player.isSneaking()) {
+            if(cap.hasTemplate()) {
+                cap.place(world, pos, player, facing);
+                return EnumActionResult.SUCCESS;
+            } else {
+                if(cap.registerCoordinate(world, pos, player, maxBlocks)) {
+                    player.sendStatusMessage(new TextComponentString("Coordinate registered"), false); //TODO language table
                     return EnumActionResult.SUCCESS;
                 } else {
-                    if(cap.registerCoordinate(world, pos, player)) {
-                        player.sendStatusMessage(new TextComponentString("Coordinate registered"), false); //TODO language table
-                        return EnumActionResult.SUCCESS;
-                    } else {
-                        player.sendStatusMessage(new TextComponentString("Area too big"), false); //TODO language table
-                        return EnumActionResult.FAIL;
-                    }
+                    player.sendStatusMessage(new TextComponentString("Area too big"), false); //TODO language table
+                    return EnumActionResult.FAIL;
                 }
-            } else {
-                cap.clearTemplate(player);
-                player.sendStatusMessage(new TextComponentString("Wand cleared"), false); //TODO language table
-                return EnumActionResult.SUCCESS;
             }
         } else {
+            cap.clearTemplate(player);
+            player.sendStatusMessage(new TextComponentString("Wand cleared"), false); //TODO language table
             return EnumActionResult.SUCCESS;
         }
     }
@@ -78,10 +87,15 @@ public class ItemTemplateWand extends Item implements IAABBRenderer{
     public ActionResult<ItemStack> onItemRightClick(World worldIn, EntityPlayer playerIn, EnumHand handIn){
         if(handIn != EnumHand.MAIN_HAND) return new ActionResult<>(EnumActionResult.PASS, playerIn.getHeldItemMainhand());
         if(worldIn.isRemote) {
-            NetworkHandler.sendToServer(new PacketCreateInMidAir(getHoveredPos(), playerIn.getHorizontalFacing()));
+            NetworkHandler.sendToServer(new PacketInteractInMidAir(getHoveredPos(), playerIn.getHorizontalFacing()));
         }
 
         return new ActionResult<>(EnumActionResult.SUCCESS, playerIn.getHeldItemMainhand());
+    }
+
+    public void onItemRightClick(EntityPlayer player, BlockPos posInMidAir, EnumFacing facing){
+        ItemStack heldItem = player.getHeldItemMainhand();
+        interactWand(player, player.world, posInMidAir, heldItem, facing);
     }
 
     @SideOnly(Side.CLIENT)
@@ -107,13 +121,39 @@ public class ItemTemplateWand extends Item implements IAABBRenderer{
     @Override
     @SideOnly(Side.CLIENT)
     public Set<ColoredAABB> getAABBs(ItemStack stack){
-        TemplateSurvival template = getCap(stack).getTemplate();
+        CapabilityTemplateWand cap = getCap(stack);
+        TemplateSurvival template = cap.getTemplate();
+        TemplateCapturer capturer = cap.getCapturer();
         if(template != null) {
             EntityPlayer player = Minecraft.getMinecraft().player;
             AxisAlignedBB aabb = template.getAABB(getHoveredPos(), player.getHorizontalFacing());
             return Collections.singleton(new ColoredAABB(aabb, 0x00AA00));
+        } else if(capturer != null) {
+            Set<ColoredAABB> aabbs = new HashSet<>();
+
+            BlockPos hoveredPos = getHoveredPos();
+            AxisAlignedBB curCaptureAABB = new AxisAlignedBB(hoveredPos, capturer.firstPos).expand(1, 1, 1);
+            AxisAlignedBB a = curCaptureAABB;
+            boolean tooBig = (int)(a.maxX - a.minX) * (int)(a.maxY - a.minY) * (int)(a.maxZ - a.minZ) > maxBlocks; //FIXME bit hacky with floating point calculations.
+            aabbs.add(new ColoredAABB(curCaptureAABB, tooBig ? 0xFF0000 : 0xFFFF00));
+
+            capturer.addBlacklistAABBs(aabbs);
+            return aabbs;
         } else {
-            return Collections.emptySet();
+            return Collections.singleton(new ColoredAABB(new AxisAlignedBB(getHoveredPos()), 0x0000FF));
+        }
+    }
+
+    @Override
+    public void onUpdate(ItemStack stack, World world, Entity entity, int itemSlot, boolean isSelected){
+        super.onUpdate(stack, world, entity, itemSlot, isSelected);
+        if(!world.isRemote && world.getTotalWorldTime() % 20 == 0 && entity instanceof EntityPlayer) {
+            getCap(stack).onInterval(world, (EntityPlayer)entity);
+        }
+        if(world.isRemote) {
+            if(getCap(stack).getCapturer() != null) { //If capturing
+                NetworkHandler.sendToServer(new PacketUpdateHoveredPos(getHoveredPos())); //Sync the hovered pos.
+            }
         }
     }
 }
