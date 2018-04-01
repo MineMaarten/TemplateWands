@@ -8,3 +8,6 @@ item.template_wand_creative.name=Creative Template Wand
 key.templatewands.category=Template Wands
 templatewands.template_wand.inc_repeat=Increase template repeating
 templatewands.template_wand.dec_repeat=Decrease template repeating
+
+# Creative tab
+itemGroup.tab_template_wands=Template Wands

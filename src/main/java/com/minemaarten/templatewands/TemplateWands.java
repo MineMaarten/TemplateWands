@@ -11,6 +11,7 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 
 import com.minemaarten.templatewands.capabilities.CapabilityTemplateWand;
 import com.minemaarten.templatewands.capabilities.DefaultCapabilityStorage;
+import com.minemaarten.templatewands.client.CreativeTabTemplateWands;
 import com.minemaarten.templatewands.lib.Constants;
 import com.minemaarten.templatewands.network.NetworkHandler;
 import com.minemaarten.templatewands.proxy.CommonProxy;
@@ -26,6 +27,7 @@ public class TemplateWands{
     public static TemplateWands instance;
     private ASMDataTable asmData;
     private IngredientProviderManager providerManager;
+    public static CreativeTabTemplateWands creativeTab;
 
     @EventHandler
     public void preInit(FMLPreInitializationEvent event){
@@ -33,6 +35,7 @@ public class TemplateWands{
         asmData = event.getAsmData();
         NetworkHandler.init();
         proxy.init();
+        creativeTab = new CreativeTabTemplateWands("tab_template_wands");
     }
 
     @EventHandler

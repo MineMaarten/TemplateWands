@@ -7,7 +7,6 @@ import java.util.Set;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.util.ITooltipFlag;
-import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
@@ -28,6 +27,7 @@ import net.minecraftforge.common.capabilities.ICapabilityProvider;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
+import com.minemaarten.templatewands.TemplateWands;
 import com.minemaarten.templatewands.capabilities.CapabilityTemplateWand;
 import com.minemaarten.templatewands.capabilities.DefaultCapabilityProvider;
 import com.minemaarten.templatewands.network.NetworkHandler;
@@ -41,7 +41,7 @@ public class ItemTemplateWand extends Item implements IAABBRenderer{
 
     public ItemTemplateWand(int maxBlocks){
         this.maxBlocks = maxBlocks;
-        setCreativeTab(CreativeTabs.TOOLS); //TODO custom tab
+        setCreativeTab(TemplateWands.creativeTab);
     }
 
     @Override
