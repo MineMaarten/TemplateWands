@@ -2,9 +2,11 @@ package com.minemaarten.templatewands.items;
 
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -20,6 +22,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.text.TextComponentString;
+import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
 import net.minecraftforge.fml.relauncher.Side;
@@ -69,16 +72,16 @@ public class ItemTemplateWand extends Item implements IAABBRenderer{
                 return EnumActionResult.SUCCESS;
             } else {
                 if(cap.registerCoordinate(world, pos, player, maxBlocks)) {
-                    player.sendStatusMessage(new TextComponentString("Coordinate registered"), false); //TODO language table
+                    player.sendStatusMessage(new TextComponentString("Coordinate registered"), true); //TODO language table
                     return EnumActionResult.SUCCESS;
                 } else {
-                    player.sendStatusMessage(new TextComponentString("Area too big"), false); //TODO language table
+                    player.sendStatusMessage(new TextComponentString(TextFormatting.RED + "Area too big"), true); //TODO language table
                     return EnumActionResult.FAIL;
                 }
             }
         } else {
             cap.clearTemplate(player);
-            player.sendStatusMessage(new TextComponentString("Wand cleared"), false); //TODO language table
+            player.sendStatusMessage(new TextComponentString("Wand cleared"), true); //TODO language table
             return EnumActionResult.SUCCESS;
         }
     }
@@ -151,6 +154,23 @@ public class ItemTemplateWand extends Item implements IAABBRenderer{
         }
     }
 
+    public String getToBeRenderedText(ItemStack stack){
+        CapabilityTemplateWand cap = getCap(stack);
+        TemplateSurvival template = cap.getTemplate();
+        TemplateCapturer capturer = cap.getCapturer();
+        if(template != null) {
+            return TextFormatting.GREEN + "Right click to place, sneak right click to clear"; //TODO language table
+        } else if(capturer != null) {
+            BlockPos hoveredPos = getHoveredPos();
+            AxisAlignedBB curCaptureAABB = new AxisAlignedBB(hoveredPos, capturer.firstPos).expand(1, 1, 1);
+            AxisAlignedBB a = curCaptureAABB;
+            int blocks = (int)(a.maxX - a.minX) * (int)(a.maxY - a.minY) * (int)(a.maxZ - a.minZ); //FIXME bit hacky with floating point calculations.
+            return (blocks > maxBlocks ? TextFormatting.RED : TextFormatting.YELLOW) + "Right click to finish. Blocks: " + blocks + "/" + (maxBlocks == Integer.MAX_VALUE ? "-" : maxBlocks); //TODO language table
+        } else {
+            return TextFormatting.BLUE + "Right click to start capturing area"; //TODO language table
+        }
+    }
+
     @Override
     public void onUpdate(ItemStack stack, World world, Entity entity, int itemSlot, boolean isSelected){
         super.onUpdate(stack, world, entity, itemSlot, isSelected);
@@ -162,6 +182,12 @@ public class ItemTemplateWand extends Item implements IAABBRenderer{
                 NetworkHandler.sendToServer(new PacketUpdateHoveredPos(getHoveredPos())); //Sync the hovered pos.
             }
         }
+    }
+
+    @Override
+    public void addInformation(ItemStack stack, World worldIn, List<String> tooltip, ITooltipFlag flagIn){
+        super.addInformation(stack, worldIn, tooltip, flagIn);
+        tooltip.add("Max blocks: " + (maxBlocks == Integer.MAX_VALUE ? "Unlimited" : maxBlocks)); //TODO language table
     }
 
     private int getRepeatAmount(ItemStack stack){

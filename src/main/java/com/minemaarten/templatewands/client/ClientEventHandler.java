@@ -3,20 +3,26 @@ package com.minemaarten.templatewands.client;
 import java.util.Set;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
+import net.minecraftforge.fml.client.FMLClientHandler;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.relauncher.Side;
 
 import org.lwjgl.opengl.GL11;
 
+import com.minemaarten.templatewands.TemplateWands;
 import com.minemaarten.templatewands.items.IAABBRenderer;
 import com.minemaarten.templatewands.items.IAABBRenderer.ColoredAABB;
+import com.minemaarten.templatewands.items.ItemTemplateWand;
 import com.minemaarten.templatewands.lib.Constants;
 
 @EventBusSubscriber(modid = Constants.MOD_ID, value = {Side.CLIENT})
@@ -57,5 +63,19 @@ public class ClientEventHandler{
         GlStateManager.enableTexture2D();
         GlStateManager.enableLighting();
         GL11.glPopMatrix();
+    }
+
+    @SubscribeEvent
+    public static void tickEnd(TickEvent.RenderTickEvent event){
+        if(event.phase == TickEvent.Phase.END && FMLClientHandler.instance().getClient().inGameHasFocus && TemplateWands.proxy.getPlayer().world != null) {
+            Minecraft mc = FMLClientHandler.instance().getClient();
+            ItemStack stack = mc.player.getHeldItemMainhand();
+            if(stack.getItem() instanceof ItemTemplateWand) {
+                ScaledResolution sr = new ScaledResolution(mc);
+                FontRenderer fontRenderer = FMLClientHandler.instance().getClient().fontRenderer;
+                String text = ((ItemTemplateWand)stack.getItem()).getToBeRenderedText(stack);
+                fontRenderer.drawStringWithShadow(text, sr.getScaledWidth() / 2 - fontRenderer.getStringWidth(text) / 2, sr.getScaledHeight() / 2 + 30, 0xFFFFFFFF);
+            }
+        }
     }
 }

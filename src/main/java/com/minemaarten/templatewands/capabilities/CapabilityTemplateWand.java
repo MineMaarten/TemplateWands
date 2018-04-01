@@ -105,7 +105,7 @@ public class CapabilityTemplateWand implements INBTSerializable<NBTTagCompound>{
                 pos = template.calculateConnectedPos(pos, facing);
             }
 
-            player.sendStatusMessage(new TextComponentString("Template placed"), false); //TODO language table
+            player.sendStatusMessage(new TextComponentString("Template placed"), true); //TODO language table
         }
     }
 
