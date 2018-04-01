@@ -18,6 +18,7 @@ public class NetworkHandler{
         INSTANCE.registerMessage(PacketInteractInMidAir.class, PacketInteractInMidAir.class, discriminant++, Side.SERVER);
         INSTANCE.registerMessage(PacketUpdateHoveredPos.class, PacketUpdateHoveredPos.class, discriminant++, Side.SERVER);
         INSTANCE.registerMessage(PacketChangeRepeatAmount.class, PacketChangeRepeatAmount.class, discriminant++, Side.SERVER);
+        INSTANCE.registerMessage(PacketTogglePlacementLock.class, PacketTogglePlacementLock.class, discriminant++, Side.SERVER);
     }
 
     public static void sendToAll(IMessage message){

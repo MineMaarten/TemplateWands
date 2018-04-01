@@ -65,9 +65,17 @@ public class ItemTemplateWand extends Item implements IAABBRenderer{
     }
 
     private EnumActionResult interactWand(EntityPlayer player, World world, BlockPos pos, ItemStack stack, EnumFacing facing){
+        BlockPos lockPos = getPlacementLockPos(stack);
+        EnumFacing lockFacing = lockPos != null ? getPlacementLockFacing(stack) : null;
+        clearPlacementLock(stack);
+
         CapabilityTemplateWand cap = getCap(stack);
         if(!player.isSneaking()) {
             if(cap.hasTemplate()) {
+                if(lockPos != null) {
+                    pos = lockPos;
+                    facing = lockFacing;
+                }
                 cap.place(world, pos, player, facing, getRepeatAmount(stack));
                 return EnumActionResult.SUCCESS;
             } else {
@@ -102,7 +110,7 @@ public class ItemTemplateWand extends Item implements IAABBRenderer{
     }
 
     @SideOnly(Side.CLIENT)
-    private BlockPos getHoveredPos(){
+    public static BlockPos getHoveredPos(){
         EntityPlayer player = Minecraft.getMinecraft().player;
         RayTraceResult hoveredObj = Minecraft.getMinecraft().objectMouseOver;
         if(hoveredObj != null && hoveredObj.getBlockPos() != null) {
@@ -113,7 +121,7 @@ public class ItemTemplateWand extends Item implements IAABBRenderer{
     }
 
     @SideOnly(Side.CLIENT)
-    private BlockPos getMidAirPos(EntityPlayer player){
+    private static BlockPos getMidAirPos(EntityPlayer player){
         float blockReachDistance = Minecraft.getMinecraft().playerController.getBlockReachDistance();
         Vec3d eyePosition = player.getPositionEyes(1);
         Vec3d look = player.getLook(1);
@@ -128,14 +136,22 @@ public class ItemTemplateWand extends Item implements IAABBRenderer{
         TemplateSurvival template = cap.getTemplate();
         TemplateCapturer capturer = cap.getCapturer();
         if(template != null) {
-            EntityPlayer player = Minecraft.getMinecraft().player;
-            BlockPos curPos = getHoveredPos();
+            BlockPos curPos = getPlacementLockPos(stack);
+            EnumFacing facing;
+            if(curPos != null) {
+                facing = getPlacementLockFacing(stack);
+            } else {
+                EntityPlayer player = Minecraft.getMinecraft().player;
+                curPos = getHoveredPos();
+                facing = player.getHorizontalFacing();
+            }
+
             Set<ColoredAABB> aabbs = new HashSet<>();
             int repeatAmount = getRepeatAmount(stack);
             for(int i = 0; i < repeatAmount; i++) {
-                AxisAlignedBB aabb = template.getAABB(curPos, player.getHorizontalFacing());
+                AxisAlignedBB aabb = template.getAABB(curPos, facing);
                 aabbs.add(new ColoredAABB(aabb, 0x00AA00));
-                curPos = template.calculateConnectedPos(curPos, player.getHorizontalFacing());
+                curPos = template.calculateConnectedPos(curPos, facing);
             }
             return aabbs;
         } else if(capturer != null) {
@@ -188,6 +204,10 @@ public class ItemTemplateWand extends Item implements IAABBRenderer{
     public void addInformation(ItemStack stack, World worldIn, List<String> tooltip, ITooltipFlag flagIn){
         super.addInformation(stack, worldIn, tooltip, flagIn);
         tooltip.add("Max blocks: " + (maxBlocks == Integer.MAX_VALUE ? "Unlimited" : maxBlocks)); //TODO language table
+        tooltip.add("While holding:");
+        tooltip.add("Press [+] to increase repeat placement");
+        tooltip.add("Press [-] to decrease repeat placement");
+        tooltip.add("Press [L] to (un)lock the placement position");
     }
 
     private int getRepeatAmount(ItemStack stack){
@@ -201,7 +221,7 @@ public class ItemTemplateWand extends Item implements IAABBRenderer{
 
     private void setRepeatAmount(EntityPlayer player, ItemStack stack, int amount){
         stack.getOrCreateSubCompound("wand").setInteger("repeatAmount", amount);
-        player.sendStatusMessage(new TextComponentString("Repeating: x" + amount), false); //TODO language table
+        player.sendStatusMessage(new TextComponentString("Repeating: x" + amount), true); //TODO language table
     }
 
     public void incRepeatAmount(EntityPlayer player, ItemStack stack){
@@ -213,5 +233,48 @@ public class ItemTemplateWand extends Item implements IAABBRenderer{
         if(repeatAmount > 1) {
             setRepeatAmount(player, stack, repeatAmount - 1);
         }
+    }
+
+    public void togglePlacementLock(EntityPlayer player, ItemStack stack, BlockPos pos, EnumFacing facing){
+        CapabilityTemplateWand cap = getCap(stack);
+        TemplateSurvival template = cap.getTemplate();
+        if(template == null) {
+            player.sendStatusMessage(new TextComponentString(TextFormatting.RED + "First set a template."), true); //TODO language table
+        } else {
+            if(getPlacementLockPos(stack) == null) {
+                setPlacementLock(stack, pos, facing);
+            } else {
+                clearPlacementLock(stack);
+            }
+        }
+    }
+
+    private void clearPlacementLock(ItemStack stack){
+        setPlacementLock(stack, null, null);
+    }
+
+    private void setPlacementLock(ItemStack stack, BlockPos pos, EnumFacing facing){
+        NBTTagCompound tag = stack.getOrCreateSubCompound("wand");
+        tag.setBoolean("locked", pos != null);
+        if(pos != null) {
+            tag.setInteger("x", pos.getX());
+            tag.setInteger("y", pos.getY());
+            tag.setInteger("z", pos.getZ());
+            tag.setByte("facing", (byte)facing.ordinal());
+        }
+    }
+
+    private BlockPos getPlacementLockPos(ItemStack stack){
+        NBTTagCompound tag = stack.getOrCreateSubCompound("wand");
+        if(tag.getBoolean("locked")) {
+            return new BlockPos(tag.getInteger("x"), tag.getInteger("y"), tag.getInteger("z"));
+        } else {
+            return null;
+        }
+    }
+
+    private EnumFacing getPlacementLockFacing(ItemStack stack){
+        byte b = stack.getOrCreateSubCompound("wand").getByte("facing");
+        return EnumFacing.VALUES[b];
     }
 }
