@@ -51,6 +51,7 @@ public class TemplateSurvival extends Template{
     private EnumFacing captureFacing;
     private IngredientList ingredients = new IngredientList();
     public Set<BlockPos> blacklistedPositions = new HashSet<>(); //Used for visualization only
+    private BlockPos offset;
 
     //TODO private IngredientList returned = new IngredientList(); // things like empty buckets after emptying a water bucket
 
@@ -72,6 +73,7 @@ public class TemplateSurvival extends Template{
 
     public AxisAlignedBB getAABB(BlockPos pos, EnumFacing facing){
         PlacementSettings settings = getPlacementSettings(facing);
+        pos = pos.add(transformedBlockPos(settings, getOffset()));
         BlockPos endPos = transformedBlockPos(settings, size.add(-1, -1, -1)).add(pos);
         return new AxisAlignedBB(pos, endPos).expand(1, 1, 1);
     }
@@ -83,6 +85,7 @@ public class TemplateSurvival extends Template{
 
     private Iterable<BlockPos> getTemplatePositions(BlockPos pos, EnumFacing facing){
         PlacementSettings settings = getPlacementSettings(facing);
+        pos = pos.add(transformedBlockPos(settings, getOffset()));
         BlockPos endPos = transformedBlockPos(settings, size.add(-1, -1, -1)).add(pos);
         return BlockPos.getAllInBox(pos, endPos); //Don't use the more efficient mutable iteration, as the pos is referenced from the network thread when spawning particles.
     }
@@ -108,9 +111,10 @@ public class TemplateSurvival extends Template{
      * takes blocks from the world and puts the data them into this template
      * MineMaarten: Copied from super to add item requirement capturing
      */
-    public void takeBlocksFromWorld(World worldIn, BlockPos startPos, BlockPos endPos, boolean takeEntities, @Nullable Block toIgnore, EntityPlayer player){
+    public void takeBlocksFromWorld(World worldIn, BlockPos startPos, BlockPos endPos, boolean takeEntities, @Nullable Block toIgnore, EntityPlayer player, BlockPos origin){
         ingredients = new IngredientList();
         blacklistedPositions.clear();
+        offset = null;
         if(endPos.getX() >= 1 && endPos.getY() >= 1 && endPos.getZ() >= 1) {
             BlockPos blockpos = startPos.add(endPos).add(-1, -1, -1);
             List<Template.BlockInfo> list = Lists.<Template.BlockInfo> newArrayList();
@@ -121,7 +125,7 @@ public class TemplateSurvival extends Template{
             this.size = endPos;
 
             for(BlockPos.MutableBlockPos blockpos$mutableblockpos : BlockPos.getAllInBoxMutable(blockpos1, blockpos2)) {
-                BlockPos blockpos3 = blockpos$mutableblockpos.subtract(blockpos1);
+                BlockPos blockpos3 = blockpos$mutableblockpos.subtract(origin);
                 IBlockState iblockstate = worldIn.getBlockState(blockpos$mutableblockpos);
 
                 if(toIgnore == null || toIgnore != iblockstate.getBlock()) {
@@ -156,7 +160,7 @@ public class TemplateSurvival extends Template{
             this.blocks.addAll(list2);
 
             if(takeEntities) {
-                takeEntitiesFromWorld(worldIn, blockpos1, blockpos2.add(1, 1, 1), player);
+                takeEntitiesFromWorld(worldIn, blockpos1, blockpos2.add(1, 1, 1), player, origin);
             } else {
                 this.entities.clear();
             }
@@ -166,7 +170,7 @@ public class TemplateSurvival extends Template{
     /**
      * MineMaarten: Copied from super to add item requirement capturing
      */
-    private void takeEntitiesFromWorld(World worldIn, BlockPos startPos, BlockPos endPos, EntityPlayer player){
+    private void takeEntitiesFromWorld(World worldIn, BlockPos startPos, BlockPos endPos, EntityPlayer player, BlockPos origin){
         List<Entity> list = worldIn.<Entity> getEntitiesWithinAABB(Entity.class, new AxisAlignedBB(startPos, endPos), new Predicate<Entity>(){
             @Override
             public boolean apply(@Nullable Entity p_apply_1_){
@@ -180,13 +184,13 @@ public class TemplateSurvival extends Template{
                 continue; //Skip when blacklisted
             }
 
-            Vec3d vec3d = new Vec3d(entity.posX - startPos.getX(), entity.posY - startPos.getY(), entity.posZ - startPos.getZ());
+            Vec3d vec3d = new Vec3d(entity.posX - origin.getX(), entity.posY - origin.getY(), entity.posZ - origin.getZ());
             NBTTagCompound nbttagcompound = new NBTTagCompound();
             entity.writeToNBTOptional(nbttagcompound);
             BlockPos blockpos;
 
             if(entity instanceof EntityPainting) {
-                blockpos = ((EntityPainting)entity).getHangingPosition().subtract(startPos);
+                blockpos = ((EntityPainting)entity).getHangingPosition().subtract(origin);
             } else {
                 blockpos = new BlockPos(vec3d);
             }
@@ -213,6 +217,20 @@ public class TemplateSurvival extends Template{
         return TemplateWands.instance.getProviderManager().addIngredients(context, ingredients) == EnumCaptureStatus.ALLOWED;
     }
 
+    private BlockPos getOffset(){
+        if(offset == null) {
+            for(BlockInfo info : blocks) {
+                if(offset == null) {
+                    offset = info.pos;
+                } else {
+                    offset = EnumFacingUtils.min(offset, info.pos);
+                }
+            }
+            if(offset == null) offset = BlockPos.ORIGIN;
+        }
+        return offset;
+    }
+
     @Override
     public NBTTagCompound writeToNBT(NBTTagCompound tag){
         tag.setByte("facing", (byte)captureFacing.ordinal());
@@ -224,18 +242,21 @@ public class TemplateSurvival extends Template{
     public void read(NBTTagCompound tag){
         captureFacing = EnumFacing.VALUES[tag.getByte("facing")];
         ingredients = IngredientList.fromNBT(tag);
+        offset = null;
         super.read(tag);
     }
 
     public void writeToBuf(ByteBuf b){
         b.writeByte(captureFacing.ordinal());
         new PacketBuffer(b).writeBlockPos(size);
+        new PacketBuffer(b).writeBlockPos(getOffset()); //FIXME beware network threadedness
     }
 
     public static TemplateSurvival fromByteBuf(ByteBuf b){
         TemplateSurvival template = new TemplateSurvival();
         template.captureFacing = EnumFacing.VALUES[b.readByte()];
         template.size = new PacketBuffer(b).readBlockPos();
+        template.offset = new PacketBuffer(b).readBlockPos();
         return template;
     }
 }

@@ -34,4 +34,12 @@ public class EnumFacingUtils{
     public static BlockPos getComponent(BlockPos pos, EnumFacing dir){
         return new BlockPos(pos.getX() * dir.getDirectionVec().getX(), pos.getY() * dir.getDirectionVec().getY(), pos.getZ() * dir.getDirectionVec().getZ());
     }
+
+    public static BlockPos min(BlockPos p1, BlockPos p2){
+        return new BlockPos(Math.min(p1.getX(), p2.getX()), Math.min(p1.getY(), p2.getY()), Math.min(p1.getZ(), p2.getZ()));
+    }
+
+    public static BlockPos max(BlockPos p1, BlockPos p2){
+        return new BlockPos(Math.max(p1.getX(), p2.getX()), Math.max(p1.getY(), p2.getY()), Math.max(p1.getZ(), p2.getZ()));
+    }
 }
