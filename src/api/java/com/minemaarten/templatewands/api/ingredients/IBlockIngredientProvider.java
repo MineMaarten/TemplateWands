@@ -17,5 +17,5 @@ public interface IBlockIngredientProvider extends IIngredientProvider{
      * @param ingredients
      * @return
      */
-    void addIngredients(BlockContext context, IInputIngredientList ingredients);
+    void addIngredients(BlockContext context, IIngredientList ingredients);
 }

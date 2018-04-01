@@ -19,7 +19,7 @@ import net.minecraftforge.items.IItemHandler;
 
 import com.minemaarten.templatewands.api.TemplateWands;
 import com.minemaarten.templatewands.api.ingredients.IEntityIngredientProvider;
-import com.minemaarten.templatewands.api.ingredients.IInputIngredientList;
+import com.minemaarten.templatewands.api.ingredients.IIngredientList;
 import com.minemaarten.templatewands.api.util.EntityContext;
 import com.minemaarten.templatewands.templates.ingredients.providers.blocks.ProviderInventoryContents;
 
@@ -47,11 +47,11 @@ public class ProviderEntitySpecials implements IEntityIngredientProvider{
     }
 
     @Override
-    public void addIngredients(EntityContext context, IInputIngredientList ingredients){
+    public void addIngredients(EntityContext context, IIngredientList ingredients){
         ItemStack[] stacks = entityToStacks.get(context.entity.getClass());
         if(stacks != null) {
             for(ItemStack stack : stacks) {
-                ingredients.addItemStackExact(stack);
+                ingredients.addItemStack(stack);
             }
 
             if(context.entity instanceof EntityMinecartContainer) {

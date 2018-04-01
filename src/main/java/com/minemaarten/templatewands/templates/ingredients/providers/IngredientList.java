@@ -10,25 +10,18 @@ import net.minecraft.nbt.NBTTagList;
 import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.fluids.FluidStack;
 
-import com.minemaarten.templatewands.api.ingredients.IInputIngredientList;
+import com.minemaarten.templatewands.api.ingredients.IIngredientList;
 import com.minemaarten.templatewands.templates.ingredients.TemplateIngredient;
 import com.minemaarten.templatewands.templates.ingredients.TemplateIngredientFluidStack;
-import com.minemaarten.templatewands.templates.ingredients.TemplateIngredientItemStack;
 import com.minemaarten.templatewands.templates.ingredients.TemplateIngredientItemStackExact;
 
-public class IngredientList implements IInputIngredientList, Iterable<TemplateIngredient<?>>{
+public class IngredientList implements IIngredientList, Iterable<TemplateIngredient<?>>{
 
     public List<TemplateIngredient<?>> ingredients = new ArrayList<>();
     private boolean hasChanged;
 
     @Override
     public void addItemStack(ItemStack stack){
-        if(stack.isEmpty()) throw new IllegalArgumentException("Stack may not be empty!");
-        add(new TemplateIngredientItemStack(stack));
-    }
-
-    @Override
-    public void addItemStackExact(ItemStack stack){
         if(stack.isEmpty()) throw new IllegalArgumentException("Stack may not be empty!");
         add(new TemplateIngredientItemStackExact(stack));
     }
@@ -58,6 +51,7 @@ public class IngredientList implements IInputIngredientList, Iterable<TemplateIn
         return hasChanged;
     }
 
+    @Override
     public void markChanged(){
         hasChanged = true;
     }

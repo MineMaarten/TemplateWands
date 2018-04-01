@@ -5,7 +5,7 @@ import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 
 import com.minemaarten.templatewands.api.TemplateWands;
-import com.minemaarten.templatewands.api.ingredients.IInputIngredientList;
+import com.minemaarten.templatewands.api.ingredients.IIngredientList;
 import com.minemaarten.templatewands.api.util.EntityContext;
 
 @TemplateWands
@@ -16,10 +16,10 @@ public class ProviderItemFrame extends TypedEntityIngredientProvider<EntityItemF
     }
 
     @Override
-    public void addIngredients(EntityItemFrame entity, EntityContext context, IInputIngredientList ingredients){
-        ingredients.addItemStackExact(new ItemStack(Items.ITEM_FRAME));
+    public void addIngredients(EntityItemFrame entity, EntityContext context, IIngredientList ingredients){
+        ingredients.addItemStack(new ItemStack(Items.ITEM_FRAME));
         if(!entity.getDisplayedItem().isEmpty()) {
-            ingredients.addItemStackExact(entity.getDisplayedItem());
+            ingredients.addItemStack(entity.getDisplayedItem());
         }
     }
 

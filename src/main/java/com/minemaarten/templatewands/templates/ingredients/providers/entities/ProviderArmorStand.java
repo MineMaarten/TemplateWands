@@ -5,7 +5,7 @@ import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 
 import com.minemaarten.templatewands.api.TemplateWands;
-import com.minemaarten.templatewands.api.ingredients.IInputIngredientList;
+import com.minemaarten.templatewands.api.ingredients.IIngredientList;
 import com.minemaarten.templatewands.api.util.EntityContext;
 
 @TemplateWands
@@ -16,16 +16,16 @@ public class ProviderArmorStand extends TypedEntityIngredientProvider<EntityArmo
     }
 
     @Override
-    public void addIngredients(EntityArmorStand entity, EntityContext context, IInputIngredientList ingredients){
-        ingredients.addItemStackExact(new ItemStack(Items.ARMOR_STAND));
+    public void addIngredients(EntityArmorStand entity, EntityContext context, IIngredientList ingredients){
+        ingredients.addItemStack(new ItemStack(Items.ARMOR_STAND));
         for(ItemStack stack : entity.getArmorInventoryList()) {
             if(!stack.isEmpty()) {
-                ingredients.addItemStackExact(stack);
+                ingredients.addItemStack(stack);
             }
         }
         for(ItemStack stack : entity.getHeldEquipment()) {
             if(!stack.isEmpty()) {
-                ingredients.addItemStackExact(stack);
+                ingredients.addItemStack(stack);
             }
         }
     }

@@ -18,5 +18,5 @@ public interface IEntityIngredientProvider extends IIngredientProvider{
      * @param ingredients
      * @return
      */
-    void addIngredients(EntityContext context, IInputIngredientList ingredients);
+    void addIngredients(EntityContext context, IIngredientList ingredients);
 }

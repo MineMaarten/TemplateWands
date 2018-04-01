@@ -9,7 +9,7 @@ import net.minecraftforge.fml.common.eventhandler.EventPriority;
 
 import com.minemaarten.templatewands.api.TemplateWands;
 import com.minemaarten.templatewands.api.ingredients.IBlockIngredientProvider;
-import com.minemaarten.templatewands.api.ingredients.IInputIngredientList;
+import com.minemaarten.templatewands.api.ingredients.IIngredientList;
 import com.minemaarten.templatewands.api.util.BlockContext;
 
 @TemplateWands
@@ -21,9 +21,9 @@ public class ProviderSilkTouch implements IBlockIngredientProvider{
     }
 
     @Override
-    public void addIngredients(BlockContext context, IInputIngredientList ingredients){
+    public void addIngredients(BlockContext context, IIngredientList ingredients){
         if(context.block.canSilkHarvest(context.world, context.pos, context.state, context.player)) {
-            ingredients.addItemStackExact(getSilkTouchBlock(context.block, context.state));
+            ingredients.addItemStack(getSilkTouchBlock(context.block, context.state));
         }
     }
 

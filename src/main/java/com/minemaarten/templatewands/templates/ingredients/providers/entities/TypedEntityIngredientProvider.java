@@ -4,7 +4,7 @@ import net.minecraft.entity.Entity;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 
 import com.minemaarten.templatewands.api.ingredients.IEntityIngredientProvider;
-import com.minemaarten.templatewands.api.ingredients.IInputIngredientList;
+import com.minemaarten.templatewands.api.ingredients.IIngredientList;
 import com.minemaarten.templatewands.api.util.EntityContext;
 
 public abstract class TypedEntityIngredientProvider<T extends Entity> implements IEntityIngredientProvider{
@@ -21,11 +21,11 @@ public abstract class TypedEntityIngredientProvider<T extends Entity> implements
 
     @SuppressWarnings("unchecked")
     @Override
-    public void addIngredients(EntityContext context, IInputIngredientList ingredients){
+    public void addIngredients(EntityContext context, IIngredientList ingredients){
         if(context.entity.getClass() == entityClass) {
             addIngredients((T)context.entity, context, ingredients);
         }
     }
 
-    public abstract void addIngredients(T entity, EntityContext context, IInputIngredientList ingredients);
+    public abstract void addIngredients(T entity, EntityContext context, IIngredientList ingredients);
 }

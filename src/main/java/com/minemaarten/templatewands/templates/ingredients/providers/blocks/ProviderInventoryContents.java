@@ -7,7 +7,7 @@ import net.minecraftforge.items.IItemHandler;
 
 import com.minemaarten.templatewands.api.TemplateWands;
 import com.minemaarten.templatewands.api.ingredients.IBlockIngredientProvider;
-import com.minemaarten.templatewands.api.ingredients.IInputIngredientList;
+import com.minemaarten.templatewands.api.ingredients.IIngredientList;
 import com.minemaarten.templatewands.api.util.BlockContext;
 import com.minemaarten.templatewands.templates.ingredients.providers.IngredientList;
 
@@ -20,7 +20,7 @@ public class ProviderInventoryContents implements IBlockIngredientProvider{
     }
 
     @Override
-    public void addIngredients(BlockContext context, IInputIngredientList ingredients){
+    public void addIngredients(BlockContext context, IIngredientList ingredients){
         if(context.te != null) {
             IItemHandler handler = context.te.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, null);
             if(handler != null) {
@@ -32,11 +32,11 @@ public class ProviderInventoryContents implements IBlockIngredientProvider{
         }
     }
 
-    public static void appendItemHandler(IItemHandler handler, IInputIngredientList ingredients){
+    public static void appendItemHandler(IItemHandler handler, IIngredientList ingredients){
         for(int i = 0; i < handler.getSlots(); i++) {
             ItemStack stack = handler.getStackInSlot(i);
             if(!stack.isEmpty()) {
-                ingredients.addItemStackExact(stack);
+                ingredients.addItemStack(stack);
             }
         }
     }

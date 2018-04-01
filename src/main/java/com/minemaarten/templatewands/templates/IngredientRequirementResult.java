@@ -36,7 +36,7 @@ public class IngredientRequirementResult{
         for(int i = 0; i < inventory.getSlots(); i++) {
             ItemStack stack = inventory.getStackInSlot(i);
             if(!stack.isEmpty()) {
-                ingredients.addItemStackExact(stack);
+                ingredients.addItemStack(stack);
             }
         }
         return ingredients;

@@ -6,7 +6,7 @@ import net.minecraftforge.fml.common.eventhandler.EventPriority;
 
 import com.minemaarten.templatewands.api.TemplateWands;
 import com.minemaarten.templatewands.api.ingredients.IBlockIngredientProvider;
-import com.minemaarten.templatewands.api.ingredients.IInputIngredientList;
+import com.minemaarten.templatewands.api.ingredients.IIngredientList;
 import com.minemaarten.templatewands.api.util.BlockContext;
 
 @TemplateWands
@@ -18,12 +18,12 @@ public class ProviderShearable implements IBlockIngredientProvider{
     }
 
     @Override
-    public void addIngredients(BlockContext context, IInputIngredientList ingredients){
+    public void addIngredients(BlockContext context, IIngredientList ingredients){
         if(context.block instanceof IShearable) {
             IShearable shearable = (IShearable)context.block;
             if(shearable.isShearable(ItemStack.EMPTY, context.world, context.pos)) {
                 for(ItemStack stack : shearable.onSheared(ItemStack.EMPTY, context.world, context.pos, 0)) {
-                    ingredients.addItemStackExact(stack);
+                    ingredients.addItemStack(stack);
                 }
             }
         }

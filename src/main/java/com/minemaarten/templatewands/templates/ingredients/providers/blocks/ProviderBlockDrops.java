@@ -12,7 +12,7 @@ import net.minecraftforge.fml.common.eventhandler.EventPriority;
 
 import com.minemaarten.templatewands.api.TemplateWands;
 import com.minemaarten.templatewands.api.ingredients.IBlockIngredientProvider;
-import com.minemaarten.templatewands.api.ingredients.IInputIngredientList;
+import com.minemaarten.templatewands.api.ingredients.IIngredientList;
 import com.minemaarten.templatewands.api.util.BlockContext;
 
 @TemplateWands
@@ -33,11 +33,11 @@ public class ProviderBlockDrops implements IBlockIngredientProvider{
     }
 
     @Override
-    public void addIngredients(BlockContext context, IInputIngredientList ingredients){
+    public void addIngredients(BlockContext context, IIngredientList ingredients){
         NonNullList<ItemStack> drops = NonNullList.create();
         context.block.getDrops(drops, context.world, context.pos, context.state, 0);
         for(ItemStack stack : drops) {
-            ingredients.addItemStackExact(stack);
+            ingredients.addItemStack(stack);
         }
 
         if(freeBlocks.contains(context.block) || context.block instanceof BlockDoor) {

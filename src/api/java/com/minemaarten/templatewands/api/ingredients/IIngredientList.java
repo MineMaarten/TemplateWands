@@ -4,6 +4,10 @@ import net.minecraft.item.ItemStack;
 import net.minecraftforge.fluids.FluidStack;
 
 public interface IIngredientList{
+    /**
+     * A stack matched by NBT.
+     * @param stack
+     */
     void addItemStack(ItemStack stack);
 
     void addFluidStack(FluidStack fluid);
