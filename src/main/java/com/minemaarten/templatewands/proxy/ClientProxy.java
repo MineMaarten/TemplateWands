@@ -5,17 +5,24 @@ import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.client.model.ModelLoader;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.client.FMLClientHandler;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
 
+import com.minemaarten.templatewands.client.KeyHandler;
 import com.minemaarten.templatewands.init.ModItems;
 import com.minemaarten.templatewands.init.ModItems.Names;
 import com.minemaarten.templatewands.lib.Constants;
 
 @EventBusSubscriber(modid = Constants.MOD_ID, value = {Side.CLIENT})
 public class ClientProxy extends CommonProxy{
+
+    @Override
+    public void init(){
+        MinecraftForge.EVENT_BUS.register(KeyHandler.getInstance());
+    }
 
     @SubscribeEvent
     public static void onModelRegistration(ModelRegistryEvent event){

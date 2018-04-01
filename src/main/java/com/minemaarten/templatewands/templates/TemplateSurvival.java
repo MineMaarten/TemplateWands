@@ -76,6 +76,11 @@ public class TemplateSurvival extends Template{
         return new AxisAlignedBB(pos, endPos).expand(1, 1, 1);
     }
 
+    public BlockPos calculateConnectedPos(BlockPos startPos, EnumFacing facing){
+        BlockPos size = transformedSize(getPlacementSettings(facing).getRotation());
+        return startPos.add(EnumFacingUtils.getComponent(size, facing));
+    }
+
     private Iterable<BlockPos> getTemplatePositions(BlockPos pos, EnumFacing facing){
         PlacementSettings settings = getPlacementSettings(facing);
         BlockPos endPos = transformedBlockPos(settings, size.add(-1, -1, -1)).add(pos);

@@ -32,6 +32,7 @@ public class TemplateWands{
         CapabilityManager.INSTANCE.register(CapabilityTemplateWand.class, new DefaultCapabilityStorage<>(), CapabilityTemplateWand::new);
         asmData = event.getAsmData();
         NetworkHandler.init();
+        proxy.init();
     }
 
     @EventHandler

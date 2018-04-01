@@ -89,18 +89,23 @@ public class CapabilityTemplateWand implements INBTSerializable<NBTTagCompound>{
         NetworkHandler.sendTo(new PacketUpdateTemplate(template), (EntityPlayerMP)player);
     }
 
-    public void place(World world, BlockPos pos, EntityPlayer player, EnumFacing facing){
+    public void place(World world, BlockPos pos, EntityPlayer player, EnumFacing facing, int repeatAmount){
         if(hasTemplate()) {
             IItemHandler itemHandler = player.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, null);
-            IngredientRequirementResult result = template.addBlocksToWorld(world, pos, facing, !player.isCreative(), itemHandler);
-            if(result.hasAllRequiredItems()) {
-                player.sendStatusMessage(new TextComponentString("Template placed"), false); //TODO language table
-            } else {
-                player.sendStatusMessage(new TextComponentString("Missing:"), false); //TODO language table
-                for(TemplateIngredient<?> ingredient : result.getMissingIngredients()) {
-                    player.sendStatusMessage(new TextComponentString(ingredient.toString()), false);
+
+            for(int i = 0; i < repeatAmount; i++) {
+                IngredientRequirementResult result = template.addBlocksToWorld(world, pos, facing, !player.isCreative(), itemHandler);
+                if(!result.hasAllRequiredItems()) {
+                    player.sendStatusMessage(new TextComponentString("Missing:"), false); //TODO language table
+                    for(TemplateIngredient<?> ingredient : result.getMissingIngredients()) {
+                        player.sendStatusMessage(new TextComponentString(ingredient.toString()), false);
+                    }
+                    return;
                 }
+                pos = template.calculateConnectedPos(pos, facing);
             }
+
+            player.sendStatusMessage(new TextComponentString("Template placed"), false); //TODO language table
         }
     }
 

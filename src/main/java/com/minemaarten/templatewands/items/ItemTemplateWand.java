@@ -65,7 +65,7 @@ public class ItemTemplateWand extends Item implements IAABBRenderer{
         CapabilityTemplateWand cap = getCap(stack);
         if(!player.isSneaking()) {
             if(cap.hasTemplate()) {
-                cap.place(world, pos, player, facing);
+                cap.place(world, pos, player, facing, getRepeatAmount(stack));
                 return EnumActionResult.SUCCESS;
             } else {
                 if(cap.registerCoordinate(world, pos, player, maxBlocks)) {
@@ -126,8 +126,15 @@ public class ItemTemplateWand extends Item implements IAABBRenderer{
         TemplateCapturer capturer = cap.getCapturer();
         if(template != null) {
             EntityPlayer player = Minecraft.getMinecraft().player;
-            AxisAlignedBB aabb = template.getAABB(getHoveredPos(), player.getHorizontalFacing());
-            return Collections.singleton(new ColoredAABB(aabb, 0x00AA00));
+            BlockPos curPos = getHoveredPos();
+            Set<ColoredAABB> aabbs = new HashSet<>();
+            int repeatAmount = getRepeatAmount(stack);
+            for(int i = 0; i < repeatAmount; i++) {
+                AxisAlignedBB aabb = template.getAABB(curPos, player.getHorizontalFacing());
+                aabbs.add(new ColoredAABB(aabb, 0x00AA00));
+                curPos = template.calculateConnectedPos(curPos, player.getHorizontalFacing());
+            }
+            return aabbs;
         } else if(capturer != null) {
             Set<ColoredAABB> aabbs = new HashSet<>();
 
@@ -154,6 +161,31 @@ public class ItemTemplateWand extends Item implements IAABBRenderer{
             if(getCap(stack).getCapturer() != null) { //If capturing
                 NetworkHandler.sendToServer(new PacketUpdateHoveredPos(getHoveredPos())); //Sync the hovered pos.
             }
+        }
+    }
+
+    private int getRepeatAmount(ItemStack stack){
+        NBTTagCompound tag = stack.getOrCreateSubCompound("wand");
+        if(tag.hasKey("repeatAmount")) {
+            return tag.getInteger("repeatAmount");
+        } else {
+            return 1;
+        }
+    }
+
+    private void setRepeatAmount(EntityPlayer player, ItemStack stack, int amount){
+        stack.getOrCreateSubCompound("wand").setInteger("repeatAmount", amount);
+        player.sendStatusMessage(new TextComponentString("Repeating: x" + amount), false); //TODO language table
+    }
+
+    public void incRepeatAmount(EntityPlayer player, ItemStack stack){
+        setRepeatAmount(player, stack, getRepeatAmount(stack) + 1);
+    }
+
+    public void decRepeatAmount(EntityPlayer player, ItemStack stack){
+        int repeatAmount = getRepeatAmount(stack);
+        if(repeatAmount > 1) {
+            setRepeatAmount(player, stack, repeatAmount - 1);
         }
     }
 }
